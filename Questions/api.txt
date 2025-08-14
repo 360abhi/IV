@@ -1,0 +1,73 @@
+Top 10 API Interview Questions & Answers
+
+1️⃣ What is an API?
+
+Answer: An API (Application Programming Interface) is a set of rules that allows two applications to communicate.
+
+Example: REST APIs send/receive data using HTTP methods like GET, POST, PUT, DELETE.
+
+2️⃣ What’s the difference between REST and SOAP?
+
+REST: Uses HTTP, lightweight, works with JSON or XML, stateless.
+
+SOAP: Uses XML, more rigid, supports complex operations, includes built-in security.
+
+3️⃣ What are HTTP Methods in REST API?
+
+GET: Retrieve data
+
+POST: Create data
+
+PUT: Update/replace data
+
+PATCH: Partially update data
+
+DELETE: Remove data
+
+4️⃣ What is the difference between PUT and PATCH?
+
+PUT: Updates the entire resource.
+
+PATCH: Updates only specific fields of the resource.
+
+5️⃣ What is an HTTP Status Code? Give examples.
+
+200 OK: Request succeeded
+
+201 Created: New resource created
+
+400 Bad Request: Invalid request
+
+401 Unauthorized: No valid authentication
+
+404 Not Found: Resource not found
+
+500 Internal Server Error: Server failed
+
+6️⃣ What is API Authentication?
+
+Answer: Verifying the identity of a user/system before granting access to an API.
+
+Examples: API keys, JWT, OAuth2.
+
+7️⃣ What’s the difference between Authentication and Authorization?
+
+Authentication: Verifies who you are.
+
+Authorization: Verifies what you can access.
+
+8️⃣ What is Idempotency in APIs?
+
+Answer: An operation that produces the same result even if executed multiple times.
+
+Example: GET is idempotent, POST usually is not.
+
+9️⃣ What is the difference between Synchronous and Asynchronous APIs?
+
+Synchronous: Waits for a response before continuing.
+
+Asynchronous: Doesn’t block execution, gets the response later (via callback/promise/webhook).
+
+🔟 What is Rate Limiting in APIs?
+
+Answer: Restricting the number of API requests a user can make in a given time period to prevent abuse.
