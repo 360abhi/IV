@@ -1,0 +1,71 @@
+op 10 JavaScript Interview Questions & Answers
+
+1️⃣ What are the data types in JavaScript?
+
+Primitive: string, number, boolean, null, undefined, symbol, bigint
+
+Non-primitive: object, array, function
+
+2️⃣ Difference between var, let, and const?
+
+var: Function-scoped, hoisted, can be redeclared.
+
+let: Block-scoped, not redeclared, can be updated.
+
+const: Block-scoped, cannot be redeclared or updated.
+
+3️⃣ What is hoisting?
+
+JS moves variable and function declarations to the top before execution.
+
+Example: Functions can be called before declaration.
+
+4️⃣ Difference between == and ===?
+
+==: Compares values after type coercion.
+
+===: Compares values without type conversion (strict).
+
+5️⃣ What are arrow functions?
+
+Shorter syntax for functions, no this binding.
+
+Example: const add = (a,b) => a + b;
+
+6️⃣ What is the difference between null and undefined?
+
+null: Intentional absence of value.
+
+undefined: Variable declared but not assigned.
+
+7️⃣ What are closures?
+
+A closure is a function that remembers variables from its outer scope even after the scope is closed.
+
+Example:
+
+function outer() {
+  let count = 0;
+  return function inner() { count++; return count; }
+}
+const counter = outer();
+counter(); // 1
+
+
+8️⃣ What is the difference between synchronous and asynchronous JS?
+
+Synchronous: Executes line by line, waits for tasks to finish.
+
+Asynchronous: Uses callbacks, promises, async/await to avoid blocking.
+
+9️⃣ What is event bubbling and event capturing?
+
+Bubbling: Event starts from target element and goes up to root.
+
+Capturing: Event starts from root and goes down to target.
+
+🔟 What is this in JavaScript?
+
+Refers to the object that is executing the current function.
+
+In strict mode, in a function this is undefined.
