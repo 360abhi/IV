@@ -1,0 +1,101 @@
+**1. What is the difference between Verification and Validation?**
+**Answer:**
+
+* **Verification** ensures the product is designed to deliver all functionality to the customer ("Are we building the product right?"). It is process-related.
+* **Validation** ensures the product actually meets the customer’s needs ("Are we building the right product?"). It is product-related.
+
+**2. What is STLC (Software Testing Life Cycle)?**
+**Answer:** A sequence of specific activities conducted during the testing process:
+
+1. Requirement Analysis
+2. Test Planning
+3. Test Case Development
+4. Environment Setup
+5. Test Execution
+6. Test Cycle Closure
+
+**3. Difference between Sanity and Smoke Testing?**
+**Answer:**
+
+* **Smoke Testing:** Basic tests to check whether the build is stable.
+* **Sanity Testing:** To check the new functionality or bug-fix doesn’t break existing features.
+
+**4. Functional vs Non-Functional Testing?**
+**Answer:**
+
+* **Functional Testing:** Testing features or functions of the software (e.g., login, registration).
+* **Non-Functional Testing:** Testing performance, usability, scalability, load, etc.
+
+**5. What is Regression Testing?**
+**Answer:** Re-running previously executed test cases to ensure that the new code changes haven't broken any existing functionality.
+
+**6. What is the difference between Test Case and Test Scenario?**
+**Answer:**
+
+* **Test Case:** A detailed set of steps to validate a specific function or feature.
+* **Test Scenario:** A high-level concept of what to test.
+
+**7. What is the difference between Severity and Priority?**
+**Answer:**
+
+* **Severity:** Impact of the defect on the application.
+* **Priority:** Order in which the defect should be fixed.
+
+**8. What is a Test Plan?**
+**Answer:** A document detailing the scope, approach, resources, and schedule of intended testing activities.
+
+**9. What is a Bug Life Cycle?**
+**Answer:** The journey of a bug from identification to closure:
+
+1. New
+2. Assigned
+3. Open
+4. Fixed
+5. Retested
+6. Closed
+7. Reopened (if failed again)
+
+**10. What is Black Box Testing?**
+**Answer:** Testing the application without knowledge of internal workings. Focuses on input and output.
+
+**11. What is White Box Testing?**
+**Answer:** Testing internal logic, code structure, and flow.
+
+**12. What is Exploratory Testing?**
+**Answer:** Simultaneously learning, test design, and execution with minimal planning.
+
+**13. What is UAT (User Acceptance Testing)?**
+**Answer:** Final phase where real users test the system to ensure it meets requirements.
+
+**14. What is Boundary Value Testing?**
+**Answer:** Testing at the edge of input ranges. E.g., if the range is 1–10, test with 0,1,10,11.
+
+**15. What is Equivalence Partitioning?**
+**Answer:** Dividing input data into valid and invalid partitions to reduce total test cases.
+
+**16. What is Risk-Based Testing?**
+**Answer:** Prioritizing tests based on risk of failure and impact.
+
+**17. What are Entry and Exit Criteria?**
+**Answer:**
+
+* **Entry Criteria:** Conditions to begin testing (e.g., code freeze, test environment ready).
+* **Exit Criteria:** Conditions to stop testing (e.g., 95% test cases passed).
+
+**18. What is Defect Leakage and Defect Density?**
+**Answer:**
+
+* **Defect Leakage:** Defects that passed to production undetected.
+* **Defect Density:** Number of confirmed defects per lines of code/module.
+
+**19. What is Difference between QA and QC?**
+**Answer:**
+
+* **QA (Quality Assurance):** Process-oriented, focuses on defect prevention.
+* **QC (Quality Control):** Product-oriented, focuses on defect identification.
+
+**20. Agile Testing vs Traditional Testing?**
+**Answer:**
+
+* **Agile Testing:** Continuous testing during development.
+* **Traditional Testing:** Testing after development phase is completed.
