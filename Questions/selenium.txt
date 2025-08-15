@@ -1,0 +1,97 @@
+How to handle multiple windows in Selenium?
+
+Answer:
+
+main_window = driver.current_window_handle
+all_windows = driver.window_handles
+
+for window in all_windows:
+    if window != main_window:
+        driver.switch_to.window(window)
+        print(driver.title)
+        driver.close()
+
+driver.switch_to.window(main_window)
+
+How to handle hidden elements in Selenium?
+
+Answer:
+
+Approach 1: If element is hidden due to scroll, use execute_script() to make it visible.
+
+element = driver.find_element(By.ID, "hidden_button")
+driver.execute_script("arguments[0].scrollIntoView(true);", element)
+
+
+Approach 2: If element is hidden in HTML (display: none), interact using JavaScript:
+
+driver.execute_script("arguments[0].click();", element)
+
+How to execute Selenium tests in parallel?
+
+Answer:
+
+Use Pytest + pytest-xdist plugin:
+
+pytest -n 3
+
+Each test runs in a separate browser instance
+
+====================
+
+1️⃣ What is the difference between findElement() and findElements()?
+
+Answer:
+
+findElement() → Returns the first matching WebElement.
+
+Throws NoSuchElementException if not found.
+
+findElements() → Returns a list of all matching elements.
+
+Returns an empty list if none are found.
+
+2️⃣ What are relative and absolute XPath? Which one is preferred?
+
+Answer:
+
+Absolute XPath → Starts from the root (/html/body/...), long and brittle.
+
+Relative XPath → Starts from the middle of the DOM (//tag[@attr='value']), shorter and more reliable.
+✅ Preferred: Relative XPath (more flexible, less affected by DOM changes).
+
+3️⃣ How do you handle file uploads in Selenium?
+
+Answer:
+
+If the file upload is done using <input type="file">, we can directly use send_keys() with the file path.
+
+4️⃣ How do you handle stale element reference exceptions?
+
+Answer:
+Occurs when the DOM changes after locating an element.
+Solutions:
+
+Re-locate the element after DOM change.
+
+Use explicit waits before interacting.
+
+from selenium.common.exceptions import StaleElementReferenceException
+try:
+    element.click()
+except StaleElementReferenceException:
+    element = driver.find_element(By.ID, "submit")
+    element.click()
+
+
+5️⃣ How to run Selenium tests without opening a browser window?
+
+Answer:
+Use headless mode in Chrome or Firefox.
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+options = Options()
+options.add_argument("--headless")
+driver = webdriver.Chrome(options=options)
