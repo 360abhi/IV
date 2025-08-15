@@ -1,0 +1,94 @@
+1. What is the difference between deepcopy and shallowcopy in Python?
+
+Shallow copy: Creates a new object but references the same nested objects. Changes to nested objects affect the copy.
+Deep copy: Creates a completely independent copy, including nested objects.
+✅ Use deepcopy when you want no shared references.
+
+2. Explain Python’s memory management / garbage collection.
+
+Python uses automatic memory management:
+
+Reference counting (object is deleted when reference count is zero)
+
+Garbage collector for cyclic references
+
+gc module can manually trigger garbage collection.
+
+3. Difference between is and == in Python.
+
+is → checks object identity (same memory address)
+
+== → checks value equality
+
+a = [1, 2]
+b = [1, 2]
+a == b  # True
+a is b  # False
+
+4. What are Python decorators and where would you use them in testing?
+
+Decorator: Function that modifies another function’s behavior without changing its code.
+
+In testing:
+
+Logging test start/end
+
+Retrying flaky tests
+
+Explain mutable vs immutable types in Python.
+
+Mutable → can be changed after creation (list, dict, set)
+
+Immutable → cannot be changed after creation (tuple, str, int)
+
+Why important? Mutable defaults in function args can cause bugs.
+
+6. What is the difference between an iterator and an iterable?
+
+Iterable → object with __iter__() method (e.g., list, tuple, string)
+
+Iterator → object with __next__() method that returns elements one by one
+
+nums = [1, 2, 3]   # Iterable
+it = iter(nums)    # Iterator
+next(it)  # 1
+
+7. Explain *args and **kwargs.
+
+*args → variable number of positional arguments
+
+**kwargs → variable number of keyword arguments
+
+8. How do you handle exceptions in Python?
+
+Use try-except-finally
+
+Custom exceptions by subclassing Exception
+
+try:
+    1/0
+except ZeroDivisionError:
+    print("Can't divide by zero")
+finally:
+    print("Done")
+
+9. What are Python’s special (magic) methods?
+
+Built-in methods with __double_underscores__
+
+Used for operator overloading, object representation, etc.
+
+class MyClass:
+    def __init__(self, value): self.value = value
+    def __str__(self): return f"MyClass({self.value})"
+
+10. Explain the difference between class variables and instance variables.
+
+Class variables → shared across all instances
+
+Instance variables → unique to each instance
+
+class Car:
+    wheels = 4  # class variable
+    def __init__(self, color):
+        self.color = color  # instance variable
