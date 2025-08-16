@@ -1,0 +1,73 @@
+Docker
+
+What is Docker and why is it used in testing?
+→ Docker packages applications with dependencies into lightweight containers, ensuring consistency across environments (dev, test, prod).
+
+Difference between Docker image and Docker container?
+→ Image = blueprint (read-only).
+→ Container = running instance of an image.
+
+How do you build and run a Docker container?
+
+docker build -t myapp .
+docker run -d -p 8080:8080 myapp
+
+
+What is Docker Compose and why use it in testing?
+→ Tool to define and run multi-container apps (e.g., app + DB + test container) with docker-compose.yml.
+
+How do you persist test data inside containers?
+→ Use volumes (-v or volumes: in compose) to store logs/reports outside container lifecycle.
+
+How do you share reports from a container back to Jenkins?
+→ Mount a volume to /reports inside container, archive that folder in Jenkins.
+
+Difference between Dockerfile and docker-compose.yml?
+→ Dockerfile = build single image.
+→ Compose = orchestrates multiple containers/services.
+
+Jenkins
+
+How do you trigger Jenkins pipelines automatically?
+→ Using webhooks (GitHub/GitLab) or pollSCM for periodic checks.
+
+What is the difference between Declarative and Scripted pipelines?
+→ Declarative = simpler, structured (pipeline {} syntax).
+→ Scripted = Groovy-based, more flexible.
+
+How do you run tests in Docker from Jenkins?
+→ Define an agent with Docker:
+
+pipeline {
+  agent { docker { image 'python:3.11' } }
+  stages {
+    stage('Test') {
+      steps { sh 'pytest tests/' }
+    }
+  }
+}
+
+
+How do you pass secrets (like DB password) to Jenkins pipelines?
+→ Store in Jenkins credentials, access via withCredentials block.
+
+What is Jenkinsfile and why is it important?
+→ Jenkinsfile defines pipeline as code, version-controlled, ensuring reproducibility.
+
+How do you handle parallel test execution in Jenkins?
+→ Use parallel block in pipeline stages.
+
+CI/CD (General)
+
+What are the benefits of CI/CD for testing?
+
+Faster feedback loop
+
+Detect bugs earlier
+
+Consistent test environment with Docker
+
+Automated reporting
+
+What steps would you include in a typical CI pipeline for automation tests?
+→ Checkout code → Build image → Spin up services (DB, app) → Run tests → Collect reports → Archive/publish → Cleanup.
