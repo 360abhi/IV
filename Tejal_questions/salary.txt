@@ -1,0 +1,32 @@
+1. Max Salary
+
+select max(salary),emp_name
+from employee
+
+2. 2nd max salary
+
+select distinct salary,emp_name
+from employee
+order by salary desc
+limit 1 offset 1
+
+or 
+
+select distinct max(salary),emp_name
+from employee
+where salary < (
+    select distinct max(salary)
+    from employee
+)
+
+
+3. Count customers
+
+select count(*) as total_customers
+from orders 
+
+4. Count customers dept_wise
+
+select dept,count(*) as count
+from orders
+group by dept
