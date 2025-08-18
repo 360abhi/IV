@@ -1,0 +1,418 @@
+Playwright Architecture
+Playwright has a 3-layer architecture:
+1.	Client Bindings (Language layer)
+o	Your test scripts (Python, Java, C#, or JS).
+o	Example: page.click("#login-btn")
+o	These are just API calls in your language.
+2.	Driver (Playwright Core – Node.js)
+o	Playwright’s brain is written in Node.js.
+o	No matter if you write in Python, Java, or .NET → your commands are sent to this Node core driver.
+o	It translates your test commands into browser-protocol messages.
+3.	Browser Layer
+o	Driver communicates with browsers via their native DevTools protocols:
+	Chromium: Chrome DevTools Protocol (CDP)
+	Firefox: patched driver via protocol
+	WebKit: proprietary automation interface
+o	Playwright spawns the browser process and controls it directly.
+o	No need for external drivers (unlike Selenium’s chromedriver/geckodriver).
+
+page.click("#login-btn")
+Python Binding → sends this command to Playwright Node core.
+
+Node Driver → translates click into browser protocol messages.
+
+Browser Protocol → browser moves mouse, checks element state, then fires the click.
+
+Response → result sent back to Node driver → Python binding → your test continues.
+
+Aspect	Sync API	Async API
+Ease of use	✅ Easier (step-by-step)	❌ Requires async/await knowledge
+Execution model	Blocking	Non-blocking (can run multiple tasks)
+Best for	Normal test cases (UI testing, E2E)	Advanced scenarios (parallel coroutines, scraping, API calls + UI mix)
+Integration	Works well with Pytest (simple)	Needs pytest-asyncio or async test runner
+Performance	Slower in parallelism	Better for high concurrency
+
+Quick Note for Pytest Integration:
+•	Sync API → works directly with pytest.
+•	Async API → requires plugin pytest-asyncio.
+Launching a Browser
+Sync Example:
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=False)   # Launch Chromium in headed mode
+    page = browser.new_page()
+    page.goto("https://example.com")
+    browser.close()
+In Playwright, BrowserContext ≈ Incognito window.
+•	A browser can have multiple contexts.
+•	Each context is isolated: no shared cookies, localStorage, or cache.
+•	It’s like opening multiple private/incognito windows inside the same browser process.
+👉 Each context can have its own authentication, cookies, sessions, etc.
+👉 This is much faster than launching multiple browsers.
+
+✅ Pages in Playwright
+•	Page = a single tab inside a browser context.
+•	You can open multiple pages within the same context.
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=False)
+    context = browser.new_context()
+
+    page1 = context.new_page()   # new tab
+    page1.goto("https://example.com")
+
+page.goto("https://example.com", timeout=60000, wait_until="networkidle")
+
+wait_until → When navigation is considered finished. Possible values:
+•	"load" → page’s load event is fired.
+•	"domcontentloaded" → DOM loaded (but not images, etc).
+•	"networkidle" → no network requests for 500ms.
+•	"commit" → when the request is sent, not waiting for load.
+1. Wait for Selector
+page.wait_for_selector("h1")   # waits until <h1> appears in DOM
+2. Wait for Timeout
+page.wait_for_timeout(2000)   # pause for 2 seconds (not recommended for real tests)
+3. Wait for Event
+page.wait_for_event("popup")   # waits for new tab/window
+4. Wait for Load State
+page.goto("https://example.com")
+page.wait_for_load_state("networkidle")  # waits until no network activity
+
+
+## skip opening new tab or page:
+def zen(self,locator:str):
+    with self.page.expect_popup() as popup_info:
+        self.page.click(f'{locator}')
+    popup = popup_info.value
+    url = popup.url
+    popup.close()
+    self.page.goto(url)
+
+✅ Common Actions
+1. Click
+page.locator("button#login").click()
+2. Type vs Fill
+•	type() → types one key at a time (slower, like user typing).
+•	fill() → directly replaces value (faster).
+page.locator("#username").type("abhishek")   # types char by char
+page.locator("#username").fill("abhishek")   # directly fills
+👉 Use .fill() for speed in automation unless you want to test real typing speed.
+3. Hover
+page.locator("button#menu").hover()
+4. Double-Click
+page.locator("button#edit").dblclick()
+5. Check / Uncheck
+For checkboxes & radio buttons:
+page.locator("#agree").check()
+page.locator("#agree").uncheck()
+👉 Works only on checkable elements.
+Advanced Actions
+1. File Upload
+page.locator("input[type='file']").set_input_files("resume.pdf")
+👉 To remove uploaded file:
+page.locator("input[type='file']").set_input_files([])
+
+2. Drag and Drop
+page.drag_and_drop("#source", "#target")
+
+Auto-Waiting (Playwright Magic ✨)
+•	Playwright automatically waits for elements to:
+o	Be attached to DOM
+o	Be visible (not hidden/covered)
+o	Be stable (not moving/animating)
+o	Be enabled (not disabled)
+•	If element doesn’t appear within default timeout (30s) → test fails.
+You can override with:
+•	page.set_default_timeout(10000)   # 10s
+
+Indexed Locators
+If multiple elements match, you can pick by index:
+page.locator("button").nth(0).click()   # first button
+page.locator("button").nth(-1).click()  # last button
+
+
+1. Built-in Assertions
+Playwright provides auto-waiting, retry-able assertions via expect().
+These assertions wait until condition is met (default: 5s timeout).
+Example
+from playwright.sync_api import expect
+
+# Locator assertion
+expect(page.locator("h1")).to_have_text("Welcome")
+
+# Page-level assertion
+expect(page).to_have_title("Dashboard")
+expect(page).to_have_url("https://example.com/dashboard")
+
+expect(locator).to_be_visible()      # Check element visible
+expect(locator).to_be_hidden()       # Opposite of above
+expect(locator).to_be_enabled()      # Enabled
+expect(locator).to_be_disabled()     # Disabled
+expect(locator).to_be_checked()      # For checkboxes/radio
+expect(locator).to_have_text("...")  # Exact text
+expect(locator).to_contain_text("...") # Substring
+expect(locator).to_have_attribute("href", "/login") # Attribute value
+expect(locator).to_have_class("active") # CSS class
+expect(locator).to_have_count(3)     # Number of elements
+
+Soft Assertion
+•	Marks failure but continues execution. Useful for multiple validations.
+expect(page.locator("h1")).to_have_text("Welcome", soft=True)
+expect(page.locator("h2")).to_have_text("Subheading", soft=True)
+
+
+5. Screenshot & Element Validation
+Full Page Screenshot
+page.screenshot(path="screenshot.png", full_page=True)
+Element Screenshot
+page.locator("h1").screenshot(path="element.png")
+
+
+Screenshot Assertion (Visual Regression)
+expect(page).to_have_screenshot("homepage.png")
+expect(page.locator("h1")).to_have_screenshot("header.png")
+•	Compares current screenshot with baseline image stored in repo.
+•	If mismatch > threshold → test fails.
+Radio Buttons & Checkboxes
+# Check / Uncheck checkbox
+page.check("#subscribe")        # Ensures checked
+page.uncheck("#subscribe")   
+3. Frames & iFrames
+Many sites embed content in iframes. Playwright supports them directly.
+Switching to frame:
+frame = page.frame(name="login-frame")
+frame.fill("#username", "admin")
+frame.click("#submit")
+By locator reference:
+frame = page.frame_locator("#iframe-id")
+frame.locator("#search").fill("Playwright")
+👉 frame_locator() is preferred (auto-wait + chaining).
+Dropdown:
+# By value
+page.locator("select#country").select_option(value="india")
+
+# By label (visible text)
+page.locator("select#country").select_option(label="United States")
+
+# By index
+page.locator("select#country").select_option(index=2)
+
+
+
+Handling JavaScript Dialogs
+Playwright automatically listens for dialogs (alerts, confirms, prompts).
+You need to attach a handler using page.on("dialog", handler).
+
+Example: Alert
+def handle_dialog(dialog):
+    print("Dialog message:", dialog.message)
+    dialog.accept()
+
+page.on("dialog", handle_dialog)
+
+page.click("#alertButton")  # triggers alert
+•	dialog.message → gets the text inside alert.
+•	dialog.accept() → clicks OK.
+•	dialog.dismiss() → clicks Cancel (useful for confirm).
+•	dialog.accept("text") → for prompts, you can pass input text.
+Handling Multiple Tabs / Popups
+When a click opens a new tab or popup, Playwright treats it as a new Page.
+Example:
+with page.expect_popup() as popup_info:
+    page.click("a#open-new-tab")
+
+new_page = popup_info.value
+print("New tab title:", new_page.title())
+
+
+===============================CODE============================
+class BrowserManager:
+    def __init__(self) -> None:
+        self.playwright = sync_playwright().start()
+        self.browser: Browser = self.playwright.chromium.launch(headless=False)
+
+    def get_browser(self) -> Browser:
+        return self.browser
+
+    def get_page(self, test_case) -> tuple[BrowserContext, Page, Path]:
+        unique_id = test_case.get("Test Case ID", "default_id")
+        trace_filename = f"{unique_id}_trace.zip"
+        trace_path = Path(__file__).parent / "traces" / trace_filename
+
+        context = self.browser.new_context(
+            record_video_dir=f"{root_dir}/videos/",
+            viewport={"width": 1280, "height": 720},
+            record_video_size={"width": 1920, "height": 1080}
+        )
+        context.tracing.start(screenshots=True, snapshots=True, sources=True)
+        print(f"Started tracing for {unique_id}")
+
+        page = context.new_page()
+        return context, page, trace_path
+
+    def close_browser(self):
+        self.browser.close()
+        self.playwright.stop()
+        print("Browser and Playwright stopped.")
+
+
+CONFTEST.PY
+@pytest.fixture(scope="session")
+def browser_manager():
+    manager = BrowserManager()
+    yield manager
+    manager.close_browser()
+
+@pytest.fixture(scope="function")
+def page(request, browser_manager):
+    test_case = request.getfixturevalue('test_case')
+    context, pg, trace_path = browser_manager.get_page(test_case)
+
+    yield pg
+    context.tracing.stop(path=str(trace_path))
+    video_path = pg.video.path()
+    unique_id = test_case.get("Test Case ID", "unknown_id")
+    print(f"Tracing stopped and saved to {trace_path}")
+    pg.close()
+    context.close()
+    shutil.move(video_path,f"{root_dir}/videos/{unique_id}.webm")
+
+
+UTILS:
+
+def load_page(self,state:str="networkidle",timeout:int=30000):
+    self.page.wait_for_load_state(state,timeout=timeout)
+
+GET ELEMENT
+element = self.page.locator(locator)
+element.wait_for(state="visible", timeout=effective_timeout)
+element.wait_for(state="attached", timeout=effective_timeout)
+return element
+
+GET ELEMENTS TEXT
+elements = self.page.locator(locator)
+elements.first.wait_for(state="visible", timeout=effective_timeout)
+count = elements.count()
+texts = [elements.nth(i).text_content(timeout=effective_timeout) for i in range(count)]
+
+ 
+QUESTIONS:
+
+1. What is Playwright, and how is it different from Selenium or Cypress?
+•	Playwright: Modern test automation framework by Microsoft, supports Chromium, Firefox, and WebKit.
+•	Selenium: Oldest, WebDriver protocol, slower, less auto-wait.
+•	Cypress: JS-only, limited browsers, runs inside browser.
+•	Playwright Strengths: Auto-waiting, multiple languages, parallel execution, network mocking.
+________________________________________
+2. Explain Playwright’s architecture.
+•	Node core: Playwright engine written in Node.js.
+•	Language bindings: Python/Java/JS/TS.
+•	Driver: Communicates with browser via CDP (Chrome DevTools Protocol) or native engines.
+________________________________________
+3. Sync vs Async APIs in Playwright Python.
+•	Sync (playwright.sync_api) → step-by-step, simpler for test cases.
+•	Async (playwright.async_api) → async/await, faster for parallel I/O.
+👉 For testing, Sync is usually preferred.
+________________________________________
+4. How do you launch browsers in Playwright?
+browser = playwright.chromium.launch(headless=False)  # Chromium
+context = browser.new_context()
+page = context.new_page()
+•	headless=True (default) → runs without UI.
+•	headless=False → runs with browser UI.
+________________________________________
+5. Difference between Browser, Context, and Page?
+•	Browser → entire browser instance.
+•	Context → isolated session (like Incognito).
+•	Page → tab/window inside a context.
+👉 You can create multiple contexts for parallel, isolated tests.
+________________________________________
+6. How do you navigate and wait for elements in Playwright?
+page.goto("https://example.com")
+page.wait_for_selector("text=Login")
+•	Auto-waiting → Playwright waits for elements to be visible/ready.
+•	You can also use page.wait_for_load_state("networkidle").
+________________________________________
+7. Explain Locators in Playwright.
+•	page.locator("css=button") → core locator.
+•	page.get_by_role("button", name="Login") → accessible locators.
+•	page.get_by_text("Submit") → text-based.
+________________________________________
+8. What is auto-waiting in Playwright?
+•	No need for sleep.
+•	Playwright automatically waits for elements to:
+1.	Be attached to DOM
+2.	Be visible
+3.	Be enabled
+4.	Be stable (not moving)
+________________________________________
+9. How do you handle dropdowns in Playwright?
+page.locator("select#country").select_option("IN")
+•	Works with value, label, or index.
+________________________________________
+10. How do you handle iframes in Playwright?
+frame = page.frame(name="frame1")
+frame.locator("#insideButton").click()
+________________________________________
+11. How do you handle Shadow DOM elements?
+page.locator("my-element").locator("button").click()
+👉 Playwright pierces shadow DOM automatically, unlike Selenium.
+________________________________________
+12. How do you handle alerts/dialogs in Playwright?
+def handle_dialog(dialog):
+    print(dialog.message)
+    dialog.accept()
+
+page.on("dialog", handle_dialog)
+page.click("#alertButton")
+________________________________________
+13. How do you handle multiple windows/tabs in Playwright?
+with page.expect_popup() as popup_info:
+    page.click("a#open-tab")
+new_page = popup_info.value
+print(new_page.title())
+________________________________________
+14. What types of assertions are supported in Playwright?
+•	Hard assertion (fails immediately):
+expect(page.locator("h1")).to_have_text("Welcome")
+•	Soft assertion (logs failure but continues):
+expect.soft(page.locator("h1")).to_have_text("Welcome")
+________________________________________
+15. How do you take and attach screenshots?
+page.screenshot(path="page.png")
+locator = page.locator("#logo")
+locator.screenshot(path="logo.png")
+👉 Attach to reports like Allure.
+________________________________________
+16. How do you record tests in Playwright?
+npx playwright codegen https://example.com
+👉 Opens browser, generates code in Python/JS.
+________________________________________
+17. How do you mock or intercept network requests?
+def handle_route(route, request):
+    if "api/data" in request.url:
+        route.fulfill(status=200, body='{"message":"mocked"}')
+    else:
+        route.continue_()
+
+page.route("**/api/*", handle_route)
+________________________________________
+18. How do you run Playwright tests in parallel?
+•	Pytest + pytest-xdist for Python:
+pytest -n 4
+•	Playwright test runner (JS) has built-in parallelism.
+________________________________________
+19. CI/CD integration of Playwright.
+•	Playwright works with Jenkins, GitHub Actions, GitLab CI.
+•	Install browsers in pipeline:
+npx playwright install --with-deps
+________________________________________
+20. Most common challenges in Playwright automation.
+•	Dynamic locators → solve with text/role locators.
+•	Flaky waits → fixed with auto-wait + expect.
+•	Multiple contexts → manage with fixtures.
+•	Network mocking → sometimes tricky for GraphQL/websockets.
+
+
+ 
+
