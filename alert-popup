@@ -1,0 +1,35 @@
+it('Handle Confirm', () => {
+    cy.on('window:confirm', (text) => {
+      expect(text).to.equal('I am a JS Confirm')
+      return false  // dismiss confirm
+    })
+
+cy.on('window:alert') → intercepts alert, Cypress auto-accepts.
+
+cy.on('window:confirm') → can return true (accept) or false (dismiss).
+
+Prompts (window:prompt) → can return a value string.
+
+# Switch to alert
+alert = driver.switch_to.alert
+print("Alert text:", alert.text)
+
+alert.accept()   # accept alert
+# alert.dismiss()  # dismiss confirm
+# alert.send_keys("hello")  # enter text in prompt
+
+
+def handle_dialog(dialog):
+        print("Dialog message:", dialog.message)
+        dialog.accept()   # or dialog.dismiss()
+
+    page.on("dialog", handle_dialog)
+
+
+page.on("dialog", handler) → registers a listener for alerts, confirms, prompts.
+
+dialog.message → gets alert text.
+
+dialog.accept() or dialog.dismiss() → accept/dismiss.
+
+Works for alert, confirm, prompt.
