@@ -1,0 +1,38 @@
+Coding:
+
+output of the following:
+1. function test() {
+  if (true) {
+    var x = 1;
+    let y = 2;
+  }
+  console.log(x);
+  console.log(y);
+}
+test();
+2. console.log(1 + true);
+3. input = "aabcccaaba"
+result = "a2b1c3a3"
+write function to get desired output
+4. palindromes in a list [ "abc","bab","non","zeez"]
+
+Theory Questions:
+1. Diff var,let,const
+2. Cypress vs playwright vs selenium Architecture
+3. bug vs defect
+4. Verification vs validation
+5. stubbing example
+6. write one Cypress custom command and use it
+7. Assert network call api parameters
+8. How to handle multiple windows in playwright/cypress
+9. Hoisting in Javascript
+10. Closures in javascript one example
+11. Callbacks and promises one example
+12. Any instance where you faced challenges while automation
+13. What is Cucumber and BDD
+14. Second largest Salary SQL
+15. having vs where clause in SQL
+16. Triggers and transactions in SQL , write one simple trigger
+17. Cypress Folder Strcture
+18. Use of cy.wrap() and cy.then()
+19. Cypress hooks
