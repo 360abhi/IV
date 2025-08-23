@@ -1,0 +1,10 @@
+left = 0
+for right in range(len(s)):
+    # expand window with s[right]
+
+    # while window invalid, shrink from left
+    while condition_not_satisfied:
+        # remove s[left]
+        left += 1
+
+    # update result (right-left+1, sum, etc.)
