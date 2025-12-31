@@ -1,0 +1,25 @@
+R1 linux + sql
+
+1) kill process in linux
+2) permissions and owner in linux
+3) search specific error in linux logs
+4) show all running process
+5) coding : three sum problem 
+6) difference between where vs having clause
+7) whats is index 
+8) queries involving joins + group by
+9) Triggers
+10) Normalisation 1 2 3 NF
+
+
+R2 playwright+ git
+
+1) coding: move all 0s to end of the list in a list of random numbers
+2) playwright architecture and why playwright 
+3) fixture and markers in pytest
+4) Rebase 
+5) fetch vs pull
+6) git stash
+7) handle multiple windows in playwright 
+8) launch headless 
+9) locator vs query selector 
