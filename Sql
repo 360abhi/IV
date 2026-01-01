@@ -1,0 +1,6 @@
+1) where vs having clause
+2) second largest salary
+3) groupby + join queries
+4) Triggers and Index
+5) Normalisation 
+6) relational vs non relational databases
