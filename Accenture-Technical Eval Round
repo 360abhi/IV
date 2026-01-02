@@ -1,0 +1,26 @@
+1) input = "Ab5hish11ek Ki16ra12n" find second highest number
+2) Abstraction example code
+3) inner join vs outer join
+4) import statments in selenium ( define driver,webdriver,driver.Chrome() what are these objects,class,interface?)
+5) what is BY and BY.Xpath
+6) write code to test for google search box in selenium and playwright
+7) what is sync api is it an object class or anything else
+8) is there multilevel inheritance in browser context page or something else
+
+Study the architecture and Composition of Selenium/Playwright Library Code in Detail
+
+Answer:
+class Browser:
+    def new_context(self):
+        return BrowserContext(self)
+
+class BrowserContext:
+    def __init__(self, browser):
+        self.browser = browser
+
+    def new_page(self):
+        return Page(self)
+
+class Page:
+    def __init__(self, context):
+        self.context = context
