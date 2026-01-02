@@ -1,0 +1,210 @@
+Notes: Selenium & Playwright Structure
+🔹 1️⃣ Selenium — webdriver, Chrome, driver
+Code you write:
+from selenium import webdriver
+driver = webdriver.Chrome()
+
+What is what:
+Name	Type
+selenium	package
+webdriver	module
+Chrome	class
+driver	object / instance
+Internal structure (simplified):
+# selenium/webdriver/__init__.py
+class WebDriver:
+    def get(self, url): ...
+
+class RemoteWebDriver(WebDriver):
+    pass
+
+class Chrome(RemoteWebDriver):
+    pass
+
+
+So:
+
+Chrome → RemoteWebDriver → WebDriver
+
+
+Inheritance.
+
+So:
+
+Chrome inherits WebDriver functionality
+
+driver is an instance of Chrome
+
+🔹 2️⃣ Playwright — sync_api, sync_playwright, p
+Code you write:
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch()
+
+What is what:
+Name	Type
+playwright	package
+sync_api	module
+sync_playwright	function
+p	Playwright object
+Simplified internal model:
+class Playwright:
+    def __enter__(self): return self
+    def chromium(self): return BrowserType()
+
+class BrowserType:
+    def launch(self): return Browser()
+
+class Browser:
+    def new_context(self): return BrowserContext(self)
+
+class BrowserContext:
+    def __init__(self, browser): self.browser = browser
+    def new_page(self): return Page(self)
+
+class Page:
+    def __init__(self, context): self.context = context
+
+Composition:
+Playwright → BrowserType → Browser → Context → Page
+
+
+Not inheritance — composition.
+
+🔹 3️⃣ Browser → Context → Page
+Usage:
+browser = p.chromium.launch()
+context = browser.new_context()
+page = context.new_page()
+
+Relationship:
+Object	Has
+Browser	Contexts
+Context	Pages
+Page	Belongs to Context
+Not inheritance:
+class Page(Context):  # ❌ Not true
+    pass
+
+🔹 4️⃣ Sync vs Async in Playwright
+
+Core Playwright is async
+
+sync_api wraps async calls and blocks
+
+Example async:
+
+async with async_playwright() as p:
+
+
+Sync:
+
+with sync_playwright() as p:
+
+🔹 5️⃣ Why Playwright uses composition
+Reason	Benefit
+Isolation	Multiple sessions
+Encapsulation	Clear responsibilities
+Scalability	Many contexts per browser
+🔹 6️⃣ Summary Table
+Selenium	Playwright
+Inheritance-based	Composition-based
+driver controls browser	Page belongs to Context
+Single session	Isolated contexts
+
+
+
+==============================================
+
+
+Playwright: Strict Mode, locator() vs page.$
+1️⃣ What is a Locator?
+
+A Locator is Playwright’s element reference.
+
+page.locator("#submit")
+
+
+It does not immediately find the element — it describes how to find it.
+
+2️⃣ What is Strict Mode?
+
+Strict mode means:
+
+A locator must match exactly one element.
+
+If it matches:
+
+0 → error
+
+More than 1 → error
+
+This prevents ambiguous actions.
+
+Example:
+page.locator("//button").click()
+
+
+If there are 3 buttons → ❌ error
+
+Fix:
+
+page.locator("//button").first.click()
+
+
+or
+
+page.locator("//button", has_text="Submit").click()
+
+3️⃣ page.locator() vs page.$()
+Feature	page.locator	page.$
+Returns	Locator	ElementHandle
+Waits	Yes	No
+Strict mode	Yes	No
+Live reference	Yes	No
+Retry	Yes	No
+Recommended	Yes	No
+4️⃣ page.$() example
+el = page.$("#submit")
+el.click()
+
+
+If element not loaded → None / fail.
+
+5️⃣ page.locator() example
+page.locator("#submit").click()
+
+
+Playwright waits until:
+
+element exists
+
+visible
+
+enabled
+
+6️⃣ Why strict mode exists
+
+Prevents clicking wrong element
+
+Prevents flaky tests
+
+Forces good selectors
+
+7️⃣ Best locator priority
+
+get_by_role
+
+get_by_label
+
+get_by_text
+
+get_by_test_id
+
+CSS
+
+XPath
+
+
+page.get_by_role("button", name="Submit")
