@@ -87,6 +87,117 @@ change owner and group: chown appuser:devops app.sh
 Permission denied for file exeuction:
 chmod +x script.sh
 
+Disk Usage:
+df → disk
+du → directory
+df -h
+Filesystem   Size  Used Avail Use%
+/dev/sda1    40G   38G   2G   95%  /
+
+Check current directory
+du -h
+
+Summarize only (VERY COMMON)
+du -sh *
+2G logs
+500M backups
+20M temp
+
+Disk is 100% full
+df -h
+↓
+du -sh /var/*
+↓
+du -sh /var/log/*
+↓
+find big files
+
+find /var/log -type f -size +500M
+> app.log : (Truncates file, does not delete)
+
+df → how full is disk / not directories
+du → who is filling it
+
+** CRON
+Cron job : A Scheduled task that runs automatically at fixed time
+Cron = background scheduler
+
+Cron Daemon :
+Cron is handled by crond service
+Runs in background
+Executes tasks silently
+
+* * * * * command
+| | | | |
+| | | | └─ Day of week (0-7, Sun)
+| | | └── Month (1-12)
+| | └─── Day of month (1-31)
+| └──── Hour (0-23)
+└────── Minute (0-59)
+
+Run script every day at 2 AM
+0 2 * * * /home/user/backup.sh
+
+| Task           | Cron          |
+| -------------- | ------------- |
+| Every minute   | `* * * * *`   |
+| Every day 2 AM | `0 2 * * *`   |
+| Every Sunday   | `0 3 * * 0`   |
+| Every 5 mins   | `*/5 * * * *` |
+| Weekdays       | `0 9 * * 1-5` |
+
+*/5 * * * *
+0,5,10,15 * * * *
+They mean the same thing
+
+/5 means every 5 units
+
+============ Scenarios=================
+
+Your application is not responding. What do you do?
+
+Check if process is running
+ps -ef | grep app
+
+Check CPU / memory
+top
+
+Check logs
+tail -f /var/log/app.log
+
+Restart or kill safely
+kill PID
+
+Disk is 100% full. App stopped
+
+
+Check disk:
+df -h
+
+Find culprit:
+du -sh /var/*
+
+Clear logs safely:
+> app.log
+
+Cron didn’t run. What do you check?
+
+Is cron present?
+crontab -l
+
+Script executable?
+
+chmod +x script.sh
+Absolute paths used?
+Logs redirected?
+Cron service running? : systemctl status crond
+Cron logs : /var/log/cron
+
+
+** grep -C 5 "ERROR" app.log : Show 5 lines BEFORE and 5 lines AFTER every matching line
+
+
+
 
 
 
