@@ -20,3 +20,55 @@ grep "error" app.log - > search error
 
 Pipes : | - > output of one -> input of another
 grep "500" app.log | awk '{print $5}' : awk - > search col
+
+
+
+Process: a running program
+it has : PID,memory,cpu usage,owner
+
+Thread : small unit inside process ( like browser having many tabs )
+Process has its own memory space, while threads share same memory inside the process
+
+Process states:
+| State | Meaning        |
+| ----- | -------------- |
+| R     | Running        |
+| S     | Sleeping       |
+| D     | Waiting on I/O |
+| Z     | Zombie         |
+
+Zombie Process: process finished execution but parent did not collect exit status, still in process table
+uses no cpu, no memory but still occupies a PID - > Kill parent process, not zombie
+ps - > process status
+It shows a snapshot of currently running processes at the moment you run the command (unlike top/htop, which are live)
+ps -f : full format : uid ,ppid,start time
+** ps -ef : all process, full details : zombie
+
+ps aux : all users process,cpu and memory usage,commands with arguments
+** ps -elf | grep Z : lists all Z process from all running process [ ps -elf | awk '$2=="Z"' ]
+kill pid : kill process
+kill -9 pid: force kill
+
+* top -> live system view : cpu , memory, load, top process
+flow:
+top
+↓
+find high CPU / memory
+↓
+ps -ef
+↓
+check logs
+↓
+kill (if needed)
+
+ps = snapshot 📸
+top = live video 🎥
+kill = remote control 🔴
+
+
+Permissions:
+
+
+
+
+
