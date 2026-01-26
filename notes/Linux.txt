@@ -68,6 +68,25 @@ kill = remote control 🔴
 
 Permissions:
 
+every file has: owner group others
+-rwxr-x---  1 appuser  devops  app.sh : appuser → owner and devops → group
+| Permission | Value |
+| ---------- | ----- |
+| r          | 4     |
+| w          | 2     |
+| x          | 1     |
+
+chmod 755 app.sh
+     |
+chmod u+x app.sh
+chmod g-w app.sh
+chmod o+r app.sh
+
+change owner : chown appuser app.sh
+change owner and group: chown appuser:devops app.sh
+Permission denied for file exeuction:
+chmod +x script.sh
+
 
 
 
