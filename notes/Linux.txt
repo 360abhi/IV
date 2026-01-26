@@ -1,2 +1,22 @@
 Linux : 
 
+Linux has monolithic kernel unlike hybrid in windows
+kernel:bridge b/w hardware and software
+
+linux is open sourced and customizable
+every thing in linux is a file
+ls 
+cat app.log
+less app.log - > scrollable
+tail -f app.log = > live logs
+grep "error" app.log - > search error
+ -i : insensitive
+-v : not present ( invert search )
+-n : include lines also
+-R : search whole directory
+-c : count error lines
+-w : exact word
+
+
+Pipes : | - > output of one -> input of another
+grep "500" app.log | awk '{print $5}' : awk - > search col
