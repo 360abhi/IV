@@ -414,5 +414,28 @@ ________________________________________
 •	Network mocking → sometimes tricky for GraphQL/websockets.
 
 
+=======================================================================
+
+Q7: How to get a response status for API request in Playwright?
+A7:
+
+response = page.request.get("https://example.com")
+print(response.status)
+
+
+What’s the difference between get_by_role() and locator()?
+A6: get_by_role() → accessibility-based, automatically finds elements by role + name, more robust. locator() → generic CSS/XPath selector.
+
+Q1: Difference between locator() and $() in Playwright?
+A1: locator() → lazy, auto-waits, can be reused. $() → finds first element immediately, no auto-wait. Use locator() in most cases.
+
+Q2: What is strict mode in Playwright?
+A2: If strict=True (default in some methods), Playwright ensures exactly one element matches; else it throws StrictError.
+
+Q3: How to get visible text only of an element?
+A3: Use inner_text(). text_content() may include hidden text.
+
+Q4: How does Playwright communicate with the browser?
+A4: Directly via browser protocols (CDP for Chromium, FRP for Firefox, WebKit Inspector) — no WebDriver, faster and stable.
  
 
