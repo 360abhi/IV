@@ -1,1 +1,192 @@
-ini
+Questions:
+
+1️⃣ What happens when you type a URL in the browser?
+Answer:
+
+DNS resolution (domain → IP)
+
+TCP 3-way handshake
+
+TLS handshake (if HTTPS)
+
+HTTP request sent
+
+Server/CDN responds
+
+Browser renders response
+
+
+2️⃣ What is DNS and why is it critical for CDNs?
+
+Answer:
+DNS maps domain names to IP addresses.
+CDNs use DNS to route users to the nearest edge server using latency and geo-based routing.
+
+What is the difference between TCP and UDP?
+
+Answer:
+TCP is connection-oriented and reliable.
+UDP is connectionless and faster but unreliable.
+
+
+4️⃣ Explain TCP 3-way handshake
+
+Answer:
+
+Client → SYN
+
+Server → SYN-ACK
+
+Client → ACK
+
+Connection is established.
+
+
+5️⃣ What is TLS handshake in simple terms?
+
+Answer:
+TLS handshake securely exchanges encryption keys so data can be sent encrypted over an insecure network.
+
+6️⃣ What is HTTP vs HTTPS?
+
+Answer:
+HTTP sends data in plain text.
+HTTPS encrypts data using TLS for security and integrity.
+
+9️⃣ What is latency vs bandwidth?
+
+Answer:
+
+Latency = delay (time)
+
+Bandwidth = data capacity
+
+Low latency matters more for CDNs than bandwidth.
+
+🔟 What is a CDN in networking terms?
+
+Answer:
+A distributed network of edge servers that cache and serve content closer to users to reduce latency and load on origin servers.
+
+
+1️⃣1️⃣ How does CDN decide which server to serve from?
+
+Answer:
+Using:
+
+DNS routing
+
+Anycast IPs
+
+Network latency
+
+Load and health checks
+
+1️⃣3️⃣ What is caching? What can and cannot be cached?
+
+Answer:
+Caching stores responses to serve future requests faster.
+
+Can cache:
+
+Images
+
+JS/CSS
+
+Static HTML
+
+Cannot cache (usually):
+
+Authenticated responses
+
+Highly dynamic data
+
+1️⃣4️⃣ What is cache hit vs cache miss?
+
+Answer:
+
+Cache hit → content served from CDN
+
+Cache miss → request forwarded to origin
+
+1️⃣5️⃣ What is TTL in DNS?
+
+Answer:
+Time To Live defines how long DNS records are cached before re-querying authoritative servers.
+
+1️⃣7️⃣ What is NAT?
+
+Answer:
+Network Address Translation allows multiple private IPs to share a single public IP.
+
+1️⃣8️⃣ What is a load balancer?
+
+Answer:
+Distributes incoming traffic across multiple servers to improve availability and performance.
+
+
+1️⃣ How does DNS-based load balancing actually work in CDNs?
+
+Deep Answer:
+When a user queries DNS, the authoritative DNS server does not always return the same IP. Instead, it considers:
+
+User’s source IP (geo-location)
+
+Network latency
+
+Server health
+
+Current load
+
+CDNs often return different IPs for the same domain, pointing to the closest or healthiest edge server. DNS answers are cached, so TTL must be carefully tuned — too high breaks failover, too low increases DNS load.
+
+
+5️⃣ Why does HTTPS increase latency and how do CDNs reduce it?
+
+Deep Answer:
+HTTPS requires:
+
+TLS handshake
+
+Certificate verification
+
+Key exchange
+
+This adds latency. CDNs reduce this by:
+
+TLS session reuse
+
+TLS termination at edge
+
+HTTP/2 multiplexing
+Thus, encryption overhead is minimized.
+
+
+6️⃣ How does a CDN help during a DDoS attack?
+
+Deep Answer:
+CDNs absorb attacks by:
+
+Distributing traffic across thousands of edge nodes
+
+Filtering malicious traffic close to source
+
+Rate limiting and WAF rules
+
+Using Anycast to dilute attack volume
+
+Origin servers are hidden behind CDN, reducing exposure.
+
+8️⃣ What is the difference between forward proxy and reverse proxy?
+
+Deep Answer:
+A forward proxy sits between client and internet (used for access control).
+A reverse proxy sits in front of servers and handles:
+
+Load balancing
+
+SSL termination
+
+Caching
+
+CDNs are large-scale reverse proxies.
