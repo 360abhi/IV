@@ -2,11 +2,12 @@ First Round
 
 1)Minimum number of characters to change to make two strings anagrams
 2)From an input string, find the number of prime numbers (digits should be continuous characters and all digits must be included; give all such combinations)
-3)HTTP vs HTTPS
-4)DNS
-5)How does ping work
-5)List running processes in Linux
-6)Read live logs in Linux
+3)There are birds on a top branch and a bottom branch, if one bird moves from bottom to top, the bottom has half as many birds as the top, and if one bird moves from top to bottom, both branches have the same number of birds—how many birds were originally on each branch?
+4)HTTP vs HTTPS
+5)DNS
+6)How does ping work
+7)List running processes in Linux
+8)Read live logs in Linux
 
 Second Round
 
