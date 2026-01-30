@@ -1,0 +1,35 @@
+First Round
+
+1)Minimum number of characters to change to make two strings anagrams
+2)From an input string, find the number of prime numbers (digits should be continuous characters and all digits must be included; give all such combinations)
+3)HTTP vs HTTPS
+4)DNS
+5)How does ping work
+5)List running processes in Linux
+6)Read live logs in Linux
+
+Second Round
+
+1)Good–bad binary string:
+String contains only 0 and 1
+Equal number of 0s and 1s
+No three same characters consecutively (111 or 000)
+2)In a sorted array, move unique elements to the front in place and return the count of unique elements
+3)What are decorators in Python
+4)What is TCP
+5)TCP vs UDP
+6)SSL handshake (HTTPS)
+7)What is DHCP
+8)Which OSI layer does a router operate on (Layer -3: Network)
+9)grep command (-i, -v)
+10)Copy a file from a remote machine to local machine (scp)
+11)Three switches on ground floor and three bulbs on first floor – identify which switch controls which bulb with only one visit upstairs
+
+
+Third Round
+
+1)Implement a calculator class in Python
+2)Engine and Car classes – implement composition (Car has an Engine)
+3)SSH connection to a server
+4)A server is down or rejecting requests – steps and Linux commands to check
+5)Command to change file permissions
