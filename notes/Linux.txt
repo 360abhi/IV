@@ -196,9 +196,49 @@ Cron logs : /var/log/cron
 
 ** grep -C 5 "ERROR" app.log : Show 5 lines BEFORE and 5 lines AFTER every matching line
 
+Replace
+sed 's/original/new/g' file.log
+g-> global
+
+connect to server
+ssh user@server_ip
+ssh -i key.pem user@server_ip
+
+copy file from remote to local
+scp user@server:/path/file.txt .
+scp -r user@server:/path/dir .
 
 
+Debugging Flow
+Network → Port → Process → Service → Logs → App.
 
+Ping (network reachability)
+ping -c 4 server_ip
 
+DNS resolving?
+nslookup example.com
+dig example.com
+Problems
+No IP → DNS issue
+Wrong IP → misconfigured DNS
 
+Check port
+ss -tulnp | grep 80
+ss -tulnp | grep 443
+telnet server_ip 80
 
+Is the process running?
+ps -ef | grep nginx
+ps aux | grep java
+
+Service status (systemd)
+systemctl status nginx
+systemctl status docker
+systemctl status myapp
+
+Application logs
+tail -f /var/log/nginx/error.log
+tail -f app.log
+
+Disk full
+df -h
