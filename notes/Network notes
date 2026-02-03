@@ -1,0 +1,397 @@
+1️⃣ TCP vs UDP (with DNS reasoning)
+TCP (Transmission Control Protocol)
+
+Reliable, ordered, connection-oriented
+
+3-way handshake (SYN → SYN-ACK → ACK)
+
+Guarantees delivery
+
+Retransmits lost packets
+
+Slower but safe
+
+Used when correctness matters
+
+HTTP/HTTPS
+
+Email
+
+File transfers
+
+UDP (User Datagram Protocol)
+
+Fast, connectionless, no guarantee
+
+No handshake
+
+No retransmission
+
+Packets may arrive out of order or be lost
+
+Very low latency
+
+Used when speed matters
+
+DNS
+
+Video streaming
+
+Online gaming
+
+VoIP
+
+🔥 Why DNS uses UDP?
+
+DNS queries are small
+
+Speed matters more than reliability
+
+If packet is lost → client retries
+
+UDP avoids handshake overhead
+
+👉 But: DNS switches to TCP when:
+
+Response > 512 bytes
+
+Zone transfers
+
+DNSSEC
+
+💡 Interview line:
+
+“DNS primarily uses UDP for speed, but falls back to TCP when reliability or larger payloads are required.”
+
+2️⃣ DNS Resolution (Step-by-Step)
+
+When you type www.google.com:
+
+Browser cache
+→ Already resolved? Done.
+
+OS cache
+
+Router / ISP cache
+
+Recursive Resolver (ISP / public like 8.8.8.8)
+If not cached:
+
+Root DNS Server
+→ “I don’t know google.com, but ask .com servers”
+
+TLD Server (.com)
+→ “Ask Google’s authoritative server”
+
+Authoritative DNS Server
+→ Returns IP (e.g., 142.250.x.x)
+
+Resolver caches it and returns IP to browser
+
+💡 Key terms to drop:
+
+Recursive resolver
+
+Root / TLD / Authoritative
+
+TTL (Time To Live)
+
+3️⃣ HTTP vs HTTPS (TLS Flow)
+HTTP
+
+Plain text
+
+Data can be sniffed or modified
+
+Port 80
+
+HTTPS
+
+HTTP + TLS encryption
+
+Secure
+
+Port 443
+
+🔐 TLS Handshake (simplified)
+
+Client → Server: “I want secure connection”
+
+Server → Client: Sends SSL certificate
+
+Client:
+
+Verifies certificate (CA, expiry, domain)
+
+Generates session key
+
+Encrypted communication starts
+
+💡 Interview line:
+
+“HTTPS ensures confidentiality, integrity, and authentication using TLS.”
+
+4️⃣ HTTP Status Codes (Must-Know)
+1xx – Informational
+
+100 Continue
+
+2xx – Success
+
+200 OK
+
+201 Created
+
+3xx – Redirection
+
+301 Moved Permanently
+
+302 Found
+
+304 Not Modified ⭐ (cache hit)
+
+4xx – Client Errors
+
+400 Bad Request
+
+401 Unauthorized
+
+403 Forbidden
+
+404 Not Found
+
+5xx – Server Errors
+
+500 Internal Server Error
+
+502 Bad Gateway
+
+503 Service Unavailable
+
+504 Gateway Timeout
+
+💡 Interview tip:
+Mention 304 = caching efficiency
+
+5️⃣ What Happens When You Type a URL
+
+Example: https://example.com
+
+Browser parses URL
+
+DNS resolution → IP
+
+TCP handshake
+
+TLS handshake (HTTPS)
+
+HTTP request sent
+
+Server processes request
+
+Response sent (HTML)
+
+Browser parses HTML
+
+Fetches CSS, JS, images
+
+Render page
+
+💡 Say this confidently — interviewers love this flow.
+
+6️⃣ Latency vs Throughput
+Latency
+
+Delay
+
+Time for a packet to travel
+
+Measured in ms
+
+Example:
+
+“How fast does the first byte arrive?”
+
+Throughput
+
+Capacity
+
+Data transferred per second
+
+Measured in Mbps / Gbps
+
+Example:
+
+“How much data can flow continuously?”
+
+🚗 Analogy:
+
+Latency = time for car to reach highway
+
+Throughput = number of cars per hour
+
+7️⃣ CDN (Origin vs Edge, Cache Hit/Miss)
+Origin Server
+
+Main backend server
+
+Source of truth
+
+Edge Server
+
+Located close to users
+
+Caches content
+
+Cache Hit
+
+Content served from edge
+
+Fast
+
+Low latency
+
+Cheaper
+
+Cache Miss
+
+Edge asks origin
+
+Slower
+
+Then caches response
+
+💡 Interview line:
+
+“CDNs reduce latency, offload origin servers, and improve scalability.”
+
+8️⃣ IP Addressing Basics
+IPv4
+
+32-bit
+
+Example: 192.168.1.1
+
+IPv6
+
+128-bit
+
+Example: 2001:db8::1
+
+Private IP Ranges
+
+10.0.0.0/8
+
+172.16.0.0/12
+
+192.168.0.0/16
+
+Public IP
+
+Internet-routable
+
+Assigned by ISP
+
+💡 NAT converts private → public
+
+9️⃣ REST Fundamentals
+
+REST = Architectural style, not protocol
+
+Core Principles
+
+Stateless
+
+Client-server
+
+Resource-based
+
+Uses HTTP methods
+
+HTTP Methods
+
+GET → read
+
+POST → create
+
+PUT → update (full)
+
+PATCH → update (partial)
+
+DELETE → delete
+
+RESTful Example
+GET /users/123
+POST /users
+DELETE /users/123
+
+
+💡 Bonus buzzwords:
+
+Idempotency (GET, PUT)
+
+JSON
+
+Status codes
+
+🔟 Load Balancers
+What they do
+
+Distribute traffic
+
+Improve availability
+
+Prevent overload
+
+Types
+
+Layer 4 (TCP/UDP)
+
+Layer 7 (HTTP/HTTPS)
+
+Algorithms
+
+Round Robin
+
+Least connections
+
+IP hash
+
+💡 Mention health checks ⭐
+
+1️⃣1️⃣ Caching (Browser / CDN / Server)
+Browser Cache
+
+Controlled by headers
+
+Cache-Control, Expires
+
+CDN Cache
+
+Static assets
+
+HTML (sometimes)
+
+Reduces origin load
+
+Server Cache
+
+Redis / Memcached
+
+DB query results
+
+API responses
+
+💡 Interview phrase:
+
+“Caching improves performance by reducing redundant computations and network calls.”
+
+1️⃣2️⃣ OSI Model (High-Level + Troubleshooting)
+Layer	Meaning	Example Issue
+7 Application	HTTP, DNS	500 error
+6 Presentation	SSL, encoding	TLS failure
+5 Session	Sessions	Timeout
+4 Transport	TCP/UDP	Packet loss
+3 Network	IP, routing	No route
+2 Data Link	MAC	Switch issue
+1 Physical	Cables	Link down
