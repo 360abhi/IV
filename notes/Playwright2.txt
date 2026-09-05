@@ -1,0 +1,7 @@
+selenium - > each browser needs its own driver with exact version
+test code - > sel lib ( wraps command as http payload ) -> webdriver ( recives http , translates to browser command ) -> browser ( performs action : sends results back )
+every req goes as http request
+
+
+Playwright - > websocket connection
+test code - > playwrigt lib ( sends via websocket to browser protocol ) -> brwoser ( bundled with playwright ,no version mismatch )
