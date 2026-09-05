@@ -5,3 +5,1887 @@ every req goes as http request
 
 Playwright - > websocket connection
 test code - > playwrigt lib ( sends via websocket to browser protocol ) -> brwoser ( bundled with playwright ,no version mismatch )
+
+
+CDP = Chrome DevTools Protocol.
+
+Chrome/Chromium exposes a protocol that allows another program to control and inspect it.
+
+
+================
+
+Day 5 — Playwright in Depth
+Python + Pytest + Sync Playwright — Interview Preparation
+1. Browser, BrowserContext and Page Lifecycle
+
+This is one of the most important Playwright concepts.
+
+Think of the hierarchy as:
+
+Playwright
+   │
+   └── Browser
+         │
+         ├── BrowserContext 1
+         │       ├── Page 1
+         │       └── Page 2
+         │
+         └── BrowserContext 2
+                 └── Page 1
+Browser
+
+Browser represents the actual browser process such as Chromium, Firefox, or WebKit.
+
+browser = playwright.chromium.launch(headless=False)
+
+Usually you don't want to launch a completely new browser process for every small operation because that is relatively expensive.
+
+BrowserContext
+
+A BrowserContext is like an independent incognito browser session.
+
+context = browser.new_context()
+
+Each context has isolated:
+
+Cookies
+Local storage
+Session storage
+Authentication
+Permissions
+Cache/session information
+
+For example:
+
+context1 = browser.new_context()
+context2 = browser.new_context()
+
+page1 = context1.new_page()
+page2 = context2.new_page()
+
+If page1 logs in as Maker, page2 does not automatically become Maker.
+
+This is extremely useful for your type of Maker–Checker testing:
+
+maker_context = browser.new_context()
+checker_context = browser.new_context()
+
+maker_page = maker_context.new_page()
+checker_page = checker_context.new_page()
+
+You can simulate two completely independent users using the same browser process.
+
+Page
+
+Page represents a browser tab.
+
+page = context.new_page()
+page.goto("https://example.com")
+
+One context can contain multiple pages/tabs.
+
+Typical lifecycle
+browser = playwright.chromium.launch()
+
+context = browser.new_context()
+
+page = context.new_page()
+
+page.goto("https://example.com")
+
+page.close()
+context.close()
+browser.close()
+Why context isolation is powerful
+
+Suppose 20 tests execute.
+
+Instead of:
+
+20 separate browser processes
+
+you can have:
+
+1 browser
+
+Context 1 -> Test 1
+Context 2 -> Test 2
+Context 3 -> Test 3
+...
+
+Each test remains isolated while browser startup overhead is reduced.
+
+Interview answer
+
+Browser represents the actual browser process. BrowserContext represents an isolated browser session, similar to an incognito profile, and Page represents an individual tab. Context isolation is powerful because every test can have independent cookies, storage and authentication without requiring a completely separate browser process. This makes tests isolated while keeping execution efficient.
+
+2. Locator vs ElementHandle
+
+This is another very common interview question.
+
+Older Selenium-style thinking is:
+
+Find an element → store that element → interact with it.
+
+Playwright encourages:
+
+Store a way to locate the element → resolve it when an action needs to happen.
+
+Locator
+login_button = page.get_by_role("button", name="Login")
+
+login_button.click()
+
+A Locator is not simply a stored DOM element.
+
+It's more like a query:
+
+"Find the button whose accessible name is Login."
+
+When you perform:
+
+login_button.click()
+
+Playwright resolves the locator against the current DOM.
+
+Why is this useful?
+
+Imagine React rerenders:
+
+Before click
+
+<button id="login">Login</button>
+
+React rerender
+
+<button id="login">Login</button>
+
+Technically, the original DOM node may have been destroyed and recreated.
+
+A stored element reference can become stale.
+
+A Locator can resolve the element again.
+
+This is called locator re-resolution.
+
+ElementHandle
+
+ElementHandle refers to a specific DOM node.
+
+Conceptually:
+
+element = page.query_selector("#login")
+element.click()
+
+If the DOM changes, that reference can become unreliable.
+
+That's why modern Playwright code should generally use Locator.
+
+Selenium comparison
+
+Selenium:
+
+element = driver.find_element(...)
+element.click()
+
+You may encounter:
+
+StaleElementReferenceException
+
+Playwright Locator:
+
+button = page.locator(...)
+button.click()
+
+The locator resolves the element when performing the action.
+
+Interview answer
+
+I prefer Locator over ElementHandle because a Locator represents a query rather than a fixed DOM element. Playwright re-resolves the locator when an action is performed, which makes it more resilient to dynamic DOM changes. Locators also provide Playwright's auto-waiting and actionability checks. ElementHandle points to a particular DOM node and is generally only needed for lower-level use cases.
+
+3. Preferred Locator Strategy
+
+A good locator hierarchy is:
+
+get_by_role()
+      ↓
+get_by_label()
+      ↓
+get_by_test_id()
+      ↓
+get_by_text()
+      ↓
+CSS
+      ↓
+XPath
+
+The exact ordering can vary by application, but the important principle is:
+
+Prefer user-facing semantics and stable test contracts over DOM implementation details.
+
+get_by_role()
+
+Usually one of the best options.
+
+page.get_by_role("button", name="Submit").click()
+
+For example:
+
+<button>Submit</button>
+
+Playwright understands its accessible role as:
+
+button
+
+and accessible name as:
+
+Submit
+
+This is good because you're locating the element similarly to how a user/accessibility layer understands the page.
+
+get_by_label()
+
+Excellent for forms.
+
+<label for="username">Username</label>
+<input id="username">
+
+Use:
+
+page.get_by_label("Username").fill("abhishek")
+get_by_text()
+page.get_by_text("Transaction Successful")
+
+Useful for visible textual content.
+
+Be careful if the same text appears many times.
+
+get_by_test_id()
+
+Developers can provide:
+
+<button data-testid="submit-payment">
+    Submit
+</button>
+
+Then:
+
+page.get_by_test_id("submit-payment").click()
+
+Very stable because it's explicitly created for automation.
+
+CSS
+page.locator("#username")
+page.locator(".submit-button")
+
+Useful when semantic locators aren't suitable.
+
+XPath
+page.locator("//button[@id='submit']")
+
+XPath isn't inherently forbidden. It becomes problematic when it's tightly coupled to page structure.
+
+Bad:
+
+page.locator(
+    "//div[2]/div[3]/div/div[4]/button[2]"
+)
+
+One <div> gets inserted and your test breaks.
+
+Better:
+
+page.get_by_role("button", name="Submit")
+Interview answer
+
+My preference is to use user-facing and semantic locators such as get_by_role and get_by_label. I also use get_by_test_id when the application provides stable test IDs. I use CSS or XPath when necessary, especially for applications with complex custom components, but I avoid DOM-structure-dependent XPath because it makes tests brittle.
+
+4. Locator Chaining
+
+You often don't want to search the whole page.
+
+Suppose:
+
+<div class="card">
+    <h2>Payment 123</h2>
+    <button>Approve</button>
+</div>
+
+<div class="card">
+    <h2>Payment 456</h2>
+    <button>Approve</button>
+</div>
+
+You want the Approve button for Payment 456.
+
+Instead of creating a monster XPath, you can chain locators.
+
+card = page.locator(".card").filter(has_text="Payment 456")
+
+card.get_by_role("button", name="Approve").click()
+
+This means:
+
+Find card
+   ↓
+whose text contains Payment 456
+   ↓
+inside that card
+   ↓
+find Approve button
+
+Very readable.
+
+5. filter(), has, has_text
+has_text
+row = page.locator("tr").filter(has_text="TXN123")
+
+Find the row containing TXN123.
+
+Then:
+
+row.get_by_role("button", name="Approve").click()
+
+This is extremely useful for transaction grids.
+
+has
+
+You can filter based on another locator.
+
+row = page.locator("tr").filter(
+    has=page.get_by_text("TXN123")
+)
+
+Meaning:
+
+Find a row containing an element matching this locator.
+
+6. nth(), first and last
+
+Suppose:
+
+rows = page.locator("table tbody tr")
+
+First row:
+
+rows.first
+
+Last:
+
+rows.last
+
+Specific index:
+
+rows.nth(2)
+
+Important:
+
+nth() is zero indexed
+
+Therefore:
+
+nth(0) -> first
+nth(1) -> second
+nth(2) -> third
+
+Avoid nth() when there is a better unique way of identifying the element.
+
+For example, this is weaker:
+
+page.get_by_role("button", name="Approve").nth(3)
+
+because UI ordering may change.
+
+Better:
+
+row = page.locator("tr").filter(has_text="TXN123")
+row.get_by_role("button", name="Approve").click()
+7. Assertions and Web-First Expectations
+
+Playwright provides assertions designed specifically for web applications.
+
+With Pytest Playwright:
+
+from playwright.sync_api import expect
+
+Example:
+
+expect(page.get_by_text("Payment Successful")).to_be_visible()
+
+The important point is:
+
+expect() retries until the condition becomes true or the timeout expires.
+
+Suppose the message appears after 2 seconds.
+
+Bad:
+
+page.wait_for_timeout(5000)
+
+assert page.get_by_text("Success").is_visible()
+
+You always waste 5 seconds.
+
+Better:
+
+expect(page.get_by_text("Success")).to_be_visible()
+
+Conceptually:
+
+0 ms   -> visible? no
+200 ms -> visible? no
+400 ms -> visible? no
+...
+2000ms -> visible? YES
+
+continue immediately
+
+This is called a web-first assertion.
+
+Other examples:
+
+expect(locator).to_be_visible()
+
+expect(locator).to_be_enabled()
+
+expect(locator).to_have_text("Approved")
+
+expect(locator).to_contain_text("Success")
+
+expect(locator).to_have_value("1000")
+
+expect(page).to_have_url("https://example.com/dashboard")
+Interview answer
+
+I prefer Playwright's web-first assertions using expect because they automatically retry until the expected state is reached or the assertion timeout expires. This is much more reliable than adding hard sleeps because the test waits only as long as necessary.
+
+8. Auto-Waiting and Actionability
+
+This is one of Playwright's biggest advantages.
+
+Suppose:
+
+page.get_by_role("button", name="Submit").click()
+
+Playwright doesn't blindly execute the click.
+
+Before clicking, it performs actionability checks.
+
+Depending on the action, Playwright verifies things such as:
+
+Element exists
+     ↓
+Visible?
+     ↓
+Stable?
+     ↓
+Receives events?
+     ↓
+Enabled?
+     ↓
+CLICK
+Visible
+
+The element must actually be visible.
+
+Stable
+
+It shouldn't be moving or animating in a way that makes the interaction unreliable.
+
+Example:
+
+button sliding onto screen...
+
+Playwright waits for it to stabilize.
+
+Receives events
+
+Imagine:
+
+Loading Overlay
+████████████████
+
+    Submit
+
+The button technically exists but the loading overlay is covering it.
+
+Playwright waits because the button isn't currently receiving pointer events at the intended click location.
+
+Enabled
+<button disabled>Submit</button>
+
+Playwright waits for it to become enabled.
+
+Editable
+
+For relevant input actions, the target needs to be editable.
+
+page.get_by_label("Username").fill("Abhishek")
+Important interview point
+
+Not every action performs every actionability check.
+
+For example, fill() and click() have somewhat different requirements.
+
+Interview answer
+
+Playwright automatically performs actionability checks before interacting with elements. Depending on the action, it checks states such as visibility, stability, whether the element receives events, whether it is enabled, and whether it is editable. This removes much of the explicit waiting code required in older automation frameworks.
+
+9. Navigation and Waiting
+
+Simple navigation:
+
+page.goto("https://example.com")
+
+Playwright already waits for navigation appropriately.
+
+But some actions themselves trigger navigation.
+
+For example:
+
+page.get_by_role("link", name="Dashboard").click()
+
+After that you may validate:
+
+expect(page).to_have_url("**/dashboard")
+
+A strong modern pattern is:
+
+page.get_by_role("button", name="Login").click()
+
+expect(page).to_have_url("**/dashboard")
+
+The URL assertion itself waits.
+
+10. expect_navigation Patterns
+
+Historically you may see:
+
+with page.expect_navigation():
+    page.get_by_role("button", name="Login").click()
+
+This expresses:
+
+Start listening for navigation
+        ↓
+perform action
+        ↓
+navigation happens
+        ↓
+continue
+
+The important principle is to start listening before the triggering action, otherwise you can create a race condition.
+
+For many modern cases, URL-based waiting is cleaner:
+
+page.get_by_role("button", name="Login").click()
+
+page.wait_for_url("**/dashboard")
+
+or:
+
+expect(page).to_have_url("**/dashboard")
+
+
+11. Load States
+
+Playwright has states such as:
+
+page.wait_for_load_state("domcontentloaded")
+page.wait_for_load_state("load")
+page.wait_for_load_state("networkidle")
+domcontentloaded
+
+HTML has been parsed and DOM is ready.
+
+It does not necessarily mean every image/resource is loaded.
+
+load
+
+The page's load event has fired.
+
+networkidle
+
+No relevant network connections for a period.
+
+You should generally avoid using networkidle as your default definition of "page ready."
+
+Modern applications constantly make:
+
+analytics calls
+polling calls
+background API requests
+websocket/network activity
+
+So network silence doesn't necessarily correspond to business readiness.
+
+Better:
+
+expect(
+    page.get_by_role("heading", name="Dashboard")
+).to_be_visible()
+
+Now you're waiting for the thing your test actually needs.
+
+12. Frames and iFrames
+
+An iframe is basically another document embedded inside the current page.
+
+Example:
+
+<iframe src="payment.html"></iframe>
+
+You can't always treat iframe content like normal elements in the parent document.
+
+Playwright provides frame_locator.
+
+payment_frame = page.frame_locator("#payment-frame")
+
+payment_frame.get_by_label("Card Number").fill("123456")
+
+Then:
+
+payment_frame.get_by_role(
+    "button",
+    name="Pay"
+).click()
+Interview answer
+
+For iframe content, I use frame_locator to scope my locators to the iframe. It keeps the interaction locator-based and allows Playwright's normal waiting behavior to work inside the frame.
+
+13. New Tabs / Popups
+
+Suppose clicking:
+
+View Report
+
+opens a new browser tab.
+
+You should start listening for the new page before clicking.
+
+with context.expect_page() as page_info:
+    page.get_by_text("View Report").click()
+
+new_page = page_info.value
+
+Then:
+
+new_page.wait_for_load_state()
+
+expect(new_page).to_have_title("Report")
+Popup event
+
+If the popup belongs specifically to a page:
+
+with page.expect_popup() as popup_info:
+    page.get_by_text("Open Report").click()
+
+popup = popup_info.value
+Difference
+context.expect_page()
+    -> any new page in context
+
+page.expect_popup()
+    -> popup triggered from that page
+Why with?
+
+It registers the listener first:
+
+Listen for popup
+      ↓
+click
+      ↓
+popup appears
+      ↓
+capture popup
+
+This prevents race conditions.
+
+14. JavaScript Dialogs
+
+Dialogs include:
+
+alert()
+confirm()
+prompt()
+
+Example:
+
+page.on("dialog", lambda dialog: dialog.accept())
+
+Or when tied to a specific action:
+
+with page.expect_event("dialog") as dialog_info:
+    page.get_by_role("button", name="Delete").click()
+
+dialog = dialog_info.value
+dialog.accept()
+
+For prompt:
+
+dialog.accept("Abhishek")
+
+To cancel:
+
+dialog.dismiss()
+15. Downloads
+
+Suppose:
+
+Download Report
+
+downloads a CSV.
+
+Use:
+
+with page.expect_download() as download_info:
+    page.get_by_role("button", name="Download").click()
+
+download = download_info.value
+
+Then:
+
+print(download.suggested_filename)
+
+Save:
+
+download.save_as("report.csv")
+
+Again, the listener is registered before clicking.
+
+16. File Upload
+
+Suppose:
+
+<input type="file">
+
+Use:
+
+page.locator("input[type=file]").set_input_files(
+    "transactions.xlsx"
+)
+
+You do not need to automate the operating-system file chooser in normal cases.
+
+Multiple files:
+
+page.locator("input[type=file]").set_input_files([
+    "file1.csv",
+    "file2.csv"
+])
+
+Clear selected files:
+
+page.locator("input[type=file]").set_input_files([])
+17. Browser Permissions
+
+You can grant browser permissions through context.
+
+For example:
+
+context.grant_permissions(["clipboard-read", "clipboard-write"])
+
+Other applications may require permissions for things like geolocation.
+
+This is much better than trying to automate browser permission popups.
+
+18. Clipboard
+
+After granting permission:
+
+context.grant_permissions(
+    ["clipboard-read", "clipboard-write"]
+)
+
+You can interact through browser JavaScript:
+
+text = page.evaluate("navigator.clipboard.readText()")
+
+Useful when testing:
+
+Copy Account Number
+Copy Transaction ID
+Copy URL
+19. Authentication State / storage_state
+
+This is extremely useful for large test suites.
+
+Imagine 500 tests.
+
+You don't necessarily want:
+
+Test 1 -> Login
+Test 2 -> Login
+Test 3 -> Login
+...
+Test 500 -> Login
+
+Instead, authenticate once and save the browser state.
+
+page.goto(login_url)
+
+page.get_by_label("Username").fill(username)
+page.get_by_label("Password").fill(password)
+
+page.get_by_role("button", name="Login").click()
+
+expect(page).to_have_url("**/dashboard")
+
+context.storage_state(path="auth.json")
+
+Now create another context:
+
+context = browser.new_context(
+    storage_state="auth.json"
+)
+
+The context starts with stored authentication information.
+
+Important security point
+
+auth.json may contain sensitive authentication information.
+
+Therefore:
+
+Don't commit it to Git.
+Don't share it.
+Regenerate when expired.
+Keep different roles separate.
+
+For Maker/Checker:
+
+auth/
+    maker.json
+    checker.json
+
+Then:
+
+maker_context = browser.new_context(
+    storage_state="auth/maker.json"
+)
+
+checker_context = browser.new_context(
+    storage_state="auth/checker.json"
+)
+20. Cookies, localStorage and sessionStorage
+
+Understand the difference.
+
+Cookies
+
+Small pieces of data associated with a domain and managed by the browser.
+
+Often used for:
+
+session IDs
+authentication
+preferences
+
+You can inspect them:
+
+cookies = context.cookies()
+localStorage
+
+Browser storage tied to an origin.
+
+It generally persists beyond a page reload and can persist across browser sessions depending on the browser/profile lifecycle.
+
+JavaScript example:
+
+localStorage.setItem("theme", "dark")
+sessionStorage
+
+Similar key/value storage, but tied more closely to the current tab/page session.
+
+Conceptually:
+
+Cookies
+    -> browser/server session mechanisms
+
+localStorage
+    -> persistent client-side origin storage
+
+sessionStorage
+    -> per-tab/per-page-session storage
+Important storage_state detail
+
+Playwright's standard storage state is mainly useful for things such as cookies and local storage/IndexedDB state depending on the API/version. Do not assume ordinary storage state automatically preserves sessionStorage.
+
+If your application stores authentication only in sessionStorage, you may need a separate strategy.
+
+This is a nice advanced interview point.
+
+21. Network Interception — route()
+
+This is one of Playwright's most powerful features.
+
+Suppose your UI calls:
+
+GET /api/transactions
+
+You can intercept it.
+
+page.route(
+    "**/api/transactions",
+    handler
+)
+22. route.continue_()
+
+Let the request continue normally.
+
+def handler(route):
+    print(route.request.url)
+    route.continue_()
+
+Useful when inspecting or modifying requests.
+
+23. route.abort()
+
+Block a request.
+
+page.route(
+    "**/*.png",
+    lambda route: route.abort()
+)
+
+You can use this to test behavior when a resource/request fails.
+
+For example:
+
+What happens if transaction API fails?
+24. route.fulfill()
+
+Return your own mocked response.
+
+page.route(
+    "**/api/user",
+    lambda route: route.fulfill(
+        status=200,
+        content_type="application/json",
+        body='{"name":"Abhishek"}'
+    )
+)
+
+Instead of:
+
+Browser
+   ↓
+Real backend
+
+you get:
+
+Browser
+   ↓
+Playwright interception
+   ↓
+Mock response
+
+Excellent for testing:
+
+500 errors
+empty data
+specific edge cases
+slow/error states
+
+without manipulating the actual backend database.
+
+25. Request and Response Events
+
+You can monitor network activity.
+
+page.on(
+    "request",
+    lambda request: print(
+        "REQUEST:", request.method, request.url
+    )
+)
+
+Response:
+
+page.on(
+    "response",
+    lambda response: print(
+        "RESPONSE:", response.status, response.url
+    )
+)
+
+Very useful for debugging.
+
+Example:
+
+UI says:
+
+Something went wrong
+
+Network logs reveal:
+
+POST /api/payment
+500
+
+Now you know it is likely backend/API behavior rather than simply a locator issue.
+
+26. Waiting for a Specific API Response
+
+This is much better than sleeping.
+
+Suppose clicking Submit triggers:
+
+POST /api/payment
+
+You can synchronize with the actual response:
+
+with page.expect_response(
+    lambda response:
+        "/api/payment" in response.url
+        and response.request.method == "POST"
+) as response_info:
+
+    page.get_by_role("button", name="Submit").click()
+
+response = response_info.value
+
+assert response.status == 200
+
+This is a powerful example of event-based synchronization.
+
+27. APIRequestContext
+
+Playwright isn't only UI automation.
+
+It can directly call APIs too.
+
+For example:
+
+response = playwright.request.get(
+    "https://example.com/api/users"
+)
+
+Or create a request context:
+
+api = playwright.request.new_context(
+    base_url="https://example.com"
+)
+
+Then:
+
+response = api.get("/api/users")
+
+assert response.status == 200
+
+POST:
+
+response = api.post(
+    "/api/payment",
+    data={
+        "amount": 1000,
+        "currency": "INR"
+    }
+)
+28. Combining API Setup with UI Validation
+
+This is an excellent framework design pattern.
+
+Imagine testing:
+
+Approve transaction
+
+You could create the transaction through UI first:
+
+Login
+↓
+Deal page
+↓
+Create transaction
+↓
+Fill 15 fields
+↓
+Submit
+↓
+Open checker
+↓
+Approve
+
+That makes the test slow.
+
+Instead:
+
+API
+↓
+Create test transaction
+↓
+UI
+↓
+Open transaction
+↓
+Approve
+↓
+Validate UI
+
+Example:
+
+response = api.post(
+    "/transactions",
+    data=transaction_data
+)
+
+transaction_id = response.json()["id"]
+
+page.goto(
+    f"https://app.com/transactions/{transaction_id}"
+)
+
+expect(
+    page.get_by_text(transaction_id)
+).to_be_visible()
+Interview answer
+
+I use APIRequestContext when UI tests require backend setup. Instead of creating all prerequisite data through the UI, I can create the data through APIs and then validate the actual functionality through the UI. This reduces execution time and makes tests more focused and reliable.
+
+That's a strong SDET answer.
+
+29. Trace Viewer
+
+Trace Viewer is one of Playwright's best debugging tools.
+
+You can record:
+
+context.tracing.start(
+    screenshots=True,
+    snapshots=True,
+    sources=True
+)
+
+After test:
+
+context.tracing.stop(
+    path="trace.zip"
+)
+
+A trace can help you inspect:
+
+Actions
+DOM snapshots
+Screenshots
+Network activity
+Console information
+Timing
+Source information
+
+This is extremely useful for CI failures where you weren't watching the browser.
+
+30. Screenshots
+page.screenshot(
+    path="failure.png",
+    full_page=True
+)
+
+Or specific element:
+
+page.get_by_role(
+    "dialog"
+).screenshot(path="dialog.png")
+
+In Pytest, you can capture screenshots automatically when tests fail.
+
+31. Video Recording
+
+Configured at context level:
+
+context = browser.new_context(
+    record_video_dir="videos/"
+)
+
+Then pages created inside that context can be recorded.
+
+This is useful in CI because you can visually inspect what happened before failure.
+
+32. Console Logs
+
+Capture browser console:
+
+page.on(
+    "console",
+    lambda msg: print(
+        f"BROWSER LOG: {msg.type}: {msg.text}"
+    )
+)
+
+This catches things such as:
+
+console.log()
+console.error()
+console.warn()
+
+Very useful when a frontend application crashes due to JavaScript errors.
+
+33. Network Debugging
+
+A good failure investigation can combine:
+
+Trace
++
+Screenshot
++
+Video
++
+Browser console
++
+Request/response logs
+
+For example:
+
+Test failed
+   ↓
+Screenshot shows blank table
+   ↓
+Network shows GET /transactions -> 500
+   ↓
+Console shows "Cannot read property..."
+
+Now you have much stronger evidence than simply:
+
+Locator timed out.
+34. Headed vs Headless
+Headed
+
+Browser UI is visible.
+
+pytest --headed
+
+Useful for:
+
+local debugging
+developing tests
+visually watching flow
+Headless
+
+Browser runs without visible UI.
+
+Common for:
+
+CI/CD
+Jenkins
+GoCD
+Docker
+
+Headless is normally faster and more suitable for automated pipelines.
+
+35. Viewport
+
+You can test different screen sizes.
+
+context = browser.new_context(
+    viewport={
+        "width": 1280,
+        "height": 720
+    }
+)
+
+Useful for responsive design testing.
+
+For example:
+
+1920x1080 desktop
+1280x720 laptop
+mobile-sized viewport
+36. Device Emulation
+
+Playwright provides device profiles.
+
+Conceptually:
+
+device = playwright.devices["iPhone 13"]
+
+Then:
+
+context = browser.new_context(**device)
+
+This can emulate properties such as:
+
+viewport
+user agent
+touch
+device scale factor
+mobile behavior
+
+Important distinction:
+
+Device emulation isn't the same thing as running on a physical iPhone.
+
+37. Parallel Execution Model
+
+Playwright's context isolation makes parallel testing much safer.
+
+With Python + Pytest, parallelization is commonly done using pytest-xdist:
+
+pytest -n 4
+
+Conceptually:
+
+Worker 1 -> Context -> Test A
+
+Worker 2 -> Context -> Test B
+
+Worker 3 -> Context -> Test C
+
+Worker 4 -> Context -> Test D
+
+Each test should have isolated browser state.
+
+But there's another important problem:
+
+Backend test-data collision
+
+Even if browser contexts are isolated:
+
+Test A -> transaction ABC123
+Test B -> transaction ABC123
+
+they can still interfere with each other through the backend/database.
+
+Therefore generate unique test data:
+
+transaction_name = f"PAYMENT_{uuid.uuid4().hex[:8]}"
+
+This is an advanced point interviewers like.
+
+Browser isolation doesn't automatically mean backend data isolation.
+
+38. Timeouts
+
+You need to understand several categories conceptually.
+
+Expect timeout
+
+Controls how long assertions retry.
+
+expect(locator).to_be_visible(timeout=10_000)
+Action timeout
+
+Actions such as:
+
+click()
+fill()
+check()
+
+can have timeouts.
+
+Example:
+
+locator.click(timeout=10_000)
+Navigation timeout
+
+Navigation operations can have their own timeout.
+
+page.set_default_navigation_timeout(30_000)
+Default timeout
+page.set_default_timeout(10_000)
+
+This affects many Playwright operations.
+
+Pytest-level test timeout
+
+A whole-test timeout is conceptually different. This is generally handled by the test runner/plugin rather than being the same thing as Playwright's locator/action timeout.
+
+Think:
+
+Whole test
+│
+├── Navigation timeout
+│
+├── Action timeout
+│
+└── Expect timeout
+Bad practice
+
+Don't solve everything with:
+
+timeout=120000
+
+If an element normally appears in 2 seconds and suddenly takes 80 seconds, blindly increasing the timeout hides a real problem.
+
+39. POM — Page Object Model
+
+You already use this, so this is important for your interview.
+
+Bad test:
+
+def test_payment(page):
+
+    page.locator("#deal").fill("123")
+
+    page.locator("#amount").fill("1000")
+
+    page.locator("#currency").click()
+
+    page.locator("//button[text()='Submit']").click()
+
+Every test knows UI implementation details.
+
+Instead create:
+
+class PaymentPage:
+
+    def __init__(self, page):
+        self.page = page
+
+        self.deal = page.get_by_label("Deal")
+        self.amount = page.get_by_label("Amount")
+        self.submit = page.get_by_role(
+            "button",
+            name="Submit"
+        )
+
+    def create_payment(self, deal, amount):
+
+        self.deal.fill(deal)
+        self.amount.fill(amount)
+        self.submit.click()
+
+Test:
+
+def test_payment(page):
+
+    payment = PaymentPage(page)
+
+    payment.create_payment(
+        deal="D123",
+        amount="1000"
+    )
+
+Much cleaner.
+
+40. Avoid Giant Page Classes
+
+A common mistake:
+
+TransactionPage.py
+    4000 lines
+    150 locators
+    100 methods
+
+Instead separate responsibilities.
+
+For example:
+
+pages/
+
+    login_page.py
+
+    deal_page.py
+
+    payment_page.py
+
+    approval_page.py
+
+components/
+
+    navbar.py
+
+    transaction_grid.py
+
+    date_picker.py
+
+If the same grid appears on multiple pages:
+
+class TransactionGrid:
+
+instead of duplicating its logic everywhere.
+
+Interview answer
+
+I use Page Objects to encapsulate page-specific locators and business interactions, but I avoid creating giant page classes. If reusable UI components such as grids, navigation bars or date pickers appear across multiple pages, I model them as separate component objects.
+
+41. Dynamic Tables and Grids
+
+This is particularly relevant to your XCRO automation.
+
+Suppose:
+
+Execution ID | Status   | Amount
+
+EX001        | Settled  | 1000
+EX002        | Pending  | 2000
+EX003        | Rejected | 3000
+
+Don't use:
+
+page.locator("tr").nth(2)
+
+because ordering can change.
+
+Better:
+
+row = page.locator("tr").filter(
+    has_text="EX002"
+)
+
+expect(row).to_contain_text("Pending")
+expect(row).to_contain_text("2000")
+
+Even better when stable attributes exist:
+
+row = page.locator(
+    '[data-execution-id="EX002"]'
+)
+42. Scrolling
+
+Sometimes elements exist but aren't currently rendered or reachable as expected.
+
+locator.scroll_into_view_if_needed()
+
+Example:
+
+row = page.get_by_text("EX002")
+
+row.scroll_into_view_if_needed()
+
+expect(row).to_be_visible()
+43. Lazy Loading / Virtualized Grids
+
+This is important.
+
+Suppose the grid contains:
+
+100,000 transactions
+
+The browser doesn't necessarily render all 100,000 rows.
+
+It may render:
+
+Rows 1-20
+
+When you scroll:
+
+Rows 21-40
+
+and old rows may even be removed from the DOM.
+
+This is virtualization.
+
+So:
+
+page.locator("tr").count()
+
+may return:
+
+20
+
+even though UI says:
+
+100,000 records
+
+This is why automation of AG Grid and similar components needs special care.
+
+Strategies include:
+
+Search/filter grid first
+↓
+locate unique row
+↓
+scroll where necessary
+↓
+validate row
+
+rather than assuming all records exist in the DOM.
+
+44. Stable Locator Strategy for Grids
+
+Prefer something stable like:
+
+row = page.locator(
+    '[role="row"]'
+).filter(
+    has_text=execution_id
+)
+
+Then find the specific cell:
+
+status = row.locator(
+    '[col-id="status"]'
+)
+
+expect(status).to_have_text("Settled")
+
+This is much better than:
+
+//div[7]/div[3]/div[2]/div[4]
+
+This is exactly the sort of thing you can discuss from your real automation experience.
+
+45. Shadow DOM
+
+Some web components use:
+
+Shadow DOM
+
+Structure conceptually:
+
+Page DOM
+
+<custom-button>
+     #shadow-root
+         <button>Submit</button>
+</custom-button>
+
+The internal button is inside a shadow root.
+
+Playwright locators can generally pierce open Shadow DOM automatically for supported locator strategies.
+
+For example, you may simply be able to do:
+
+page.get_by_role(
+    "button",
+    name="Submit"
+).click()
+Limitation
+
+Closed shadow roots are intentionally inaccessible.
+
+Also, XPath has limitations with shadow boundaries, so CSS/semantic locators are generally preferable for Shadow DOM.
+
+Interview answer
+
+Playwright locators generally support open Shadow DOM without requiring me to manually traverse the shadow root. However, closed shadow roots cannot normally be accessed, and XPath doesn't pierce shadow roots in the same way, so I prefer semantic or CSS-based locators.
+
+46. Handling Flaky Timing
+
+This is one of the biggest interview topics.
+
+Bad automation:
+
+page.click("#submit")
+
+page.wait_for_timeout(5000)
+
+assert page.locator("#success").is_visible()
+
+Why is it bad?
+
+Maybe success takes:
+
+1 second -> wasted 4 seconds
+
+6 seconds -> test fails
+
+So a fixed 5-second wait is simultaneously:
+
+too long
+AND
+not long enough
+
+That's why fixed waits are bad.
+
+47. Use Expectations Instead
+page.get_by_role(
+    "button",
+    name="Submit"
+).click()
+
+expect(
+    page.get_by_text("Successful")
+).to_be_visible()
+
+Playwright waits dynamically.
+
+48. Use Events Instead of Sleeps
+
+If clicking generates download:
+
+Bad:
+
+page.click("#download")
+page.wait_for_timeout(5000)
+
+Better:
+
+with page.expect_download() as download_info:
+    page.get_by_text("Download").click()
+
+If clicking opens popup:
+
+with page.expect_popup() as popup_info:
+    page.get_by_text("Report").click()
+
+If clicking triggers API:
+
+with page.expect_response(
+    lambda r: "/transactions" in r.url
+) as response_info:
+
+    page.get_by_text("Submit").click()
+
+If clicking navigates:
+
+page.get_by_text("Login").click()
+
+expect(page).to_have_url("**/dashboard")
+
+This gives you a fundamental Playwright principle:
+
+Don't ask:
+
+"How many seconds should I wait?"
+
+Ask:
+
+"What event/state proves the application is ready?"
+
+That's an excellent interview mindset.
+
+49. A Real Pytest + Playwright Framework Flow
+
+A clean framework might look like:
+
+project/
+│
+├── pages/
+│   ├── login_page.py
+│   ├── deal_page.py
+│   ├── payment_page.py
+│   └── approval_page.py
+│
+├── components/
+│   ├── transaction_grid.py
+│   └── navbar.py
+│
+├── tests/
+│   ├── test_payment.py
+│   └── test_deal.py
+│
+├── utils/
+│   ├── api_client.py
+│   ├── data_generator.py
+│   └── logger.py
+│
+├── testdata/
+│   └── payment_data.json
+│
+├── conftest.py
+│
+└── pytest.ini
+
+Your fixture can manage the lifecycle:
+
+@pytest.fixture
+def browser_context(browser):
+
+    context = browser.new_context()
+
+    yield context
+
+    context.close()
+
+Then:
+
+@pytest.fixture
+def page(browser_context):
+
+    page = browser_context.new_page()
+
+    yield page
+
+    page.close()
+
+The test simply receives:
+
+def test_payment(page):
+
+    payment_page = PaymentPage(page)
+
+    payment_page.create_payment(
+        "D123",
+        "1000"
+    )
+50. How All These Concepts Connect
+
+Don't memorize these as 25 disconnected definitions. Think about the entire execution lifecycle.
+
+PYTEST
+  │
+  ▼
+Test starts
+  │
+  ▼
+Browser
+  │
+  ▼
+BrowserContext
+isolated session
+  │
+  ▼
+Page
+browser tab
+  │
+  ▼
+POM
+business interactions
+  │
+  ▼
+Locator
+find current DOM element
+  │
+  ▼
+Auto-waiting
+actionability checks
+  │
+  ▼
+Action
+click/fill/select
+  │
+  ▼
+Event / API / Navigation
+  │
+  ▼
+Web-first expect()
+  │
+  ▼
+Validation
+  │
+  ├── Failure?
+  │      │
+  │      ├── Screenshot
+  │      ├── Trace
+  │      ├── Video
+  │      ├── Console
+  │      └── Network
+  │
+  ▼
+Context closed
+  │
+  ▼
+Next test receives
+fresh isolated context
+
+Once you understand this flow, most Playwright interview questions become much easier.
+
+51. The 12 Answers I Would Definitely Memorize for an Interview
+Interview question	Core thing to say
+Why Playwright?	Auto-waiting, powerful locators, context isolation, network/API support, multi-browser support and strong debugging capabilities
+Browser vs Context vs Page?	Browser = process, Context = isolated browser session, Page = tab
+Why BrowserContext?	Cheap isolated sessions with independent cookies/storage/authentication
+Locator vs ElementHandle?	Locator is re-resolved against current DOM and integrates auto-waiting; ElementHandle references a particular DOM node
+Best locator?	Prefer semantic/user-facing locators like role/label and stable test IDs; CSS/XPath when required
+Why avoid XPath?	Not XPath itself; brittle DOM-structure-dependent XPath is the problem
+What is auto-waiting?	Playwright checks actionability before performing actions
+What are actionability checks?	Depending on action: visible, stable, receives events, enabled, editable
+Why expect()?	Web-first assertions automatically retry until condition succeeds or times out
+Why avoid sleeps?	Fixed waits are slow and flaky; synchronize against actual UI state/event
+How handle iframe?	frame_locator()
+How handle popup?	Register expect_popup()/expect_page() before triggering action
+
+And for a more senior SDET interview, remember these four especially:
+
+How do you reduce flaky tests?
+I use stable semantic locators, Playwright's auto-waiting, web-first assertions and event-based synchronization. I avoid fixed sleeps and instead wait for the actual state that proves the application is ready, such as a UI state, URL change, response, popup or download.
+
+How do you speed up UI tests?
+I use APIs for prerequisite test-data creation where appropriate, reuse authentication through storage state, run independent tests in parallel and keep UI tests focused on the behavior that actually needs UI validation.
+
+How do you debug CI failures?
+I capture traces, screenshots, videos, browser console messages and relevant network requests/responses so that a CI failure provides enough evidence to determine whether it came from the test, frontend, backend or environment.
+
+How do you design a scalable Playwright framework?
+I use Pytest fixtures for lifecycle and reusable setup, Page Objects for page-level behavior, reusable component objects for things like grids and navigation, external test data where appropriate, API utilities for backend setup, and isolated browser contexts so tests remain independent.
+
+The biggest thing for your interview is don't just say "Playwright automatically waits." Explain what it waits for and why. Similarly, don't just say "POM makes code reusable." Explain how you separate page behavior, reusable components, fixtures, test data, and validations. That moves your answer from a basic automation tester answer toward an experienced SDET answer.
